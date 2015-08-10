@@ -99,8 +99,6 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
         listChecked = false;
 
         miles = 10;
-
-        createMap();
     }
 
     @Override
@@ -114,6 +112,8 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
         viewMap.setOnClickListener(this);
         viewList.setOnClickListener(this);
         view = v;
+
+        createMap();
         return v;
     }
 
@@ -205,15 +205,13 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
     private void displayList() {
         listFrag = getActivity().getFragmentManager().findFragmentByTag(TAG_LISTFRAG);
         mfrag = (com.google.android.gms.maps.MapFragment) getActivity().getFragmentManager().findFragmentByTag(TAG_MAP);
-        if (mfrag != null) {
-            getActivity().getFragmentManager().beginTransaction().remove(mfrag).commit();
-        }
+        getActivity().getFragmentManager().beginTransaction().remove(mfrag).commit();
+
         if (listFrag == null) {
 
             listFrag = ListFrag.newInstance("a", "n");
         }
         getActivity().getFragmentManager().beginTransaction().add(R.id.container, listFrag, TAG_LISTFRAG).commit();
-        int a = 2;
 
     }
 
