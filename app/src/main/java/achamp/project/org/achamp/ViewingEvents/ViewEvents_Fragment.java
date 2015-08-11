@@ -32,8 +32,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
  * Use the {@link ViewEvents_Fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ViewEvents_Fragment extends Fragment implements View.OnClickListener,
-        ListFrag.OnFragmentInteractionListener, OnMapReadyCallback {
+public class ViewEvents_Fragment extends Fragment implements View.OnClickListener, OnMapReadyCallback {
 
     private static final String TAG_LISTFRAG = ("list");
     private static final String TAG_MAP = ("map");
@@ -215,10 +214,7 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
 
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
 
-    }
 
     @Override
     public void onMapReady(GoogleMap map) {
