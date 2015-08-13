@@ -12,6 +12,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -35,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 
 import javax.xml.transform.Result;
 
@@ -235,7 +238,10 @@ public class CreateEvents_Fragment extends Fragment implements View.OnClickListe
 
     private AChampEvent readyToPost()
     {
-        Bitmap bitmap = ((BitmapDrawable)aChampPicture.getDrawable()).getBitmap();
+        Bitmap bitmap = null;
+        if(aChampPicture != null) {
+            bitmap = ((BitmapDrawable) aChampPicture.getDrawable()).getBitmap();
+        }
         return new AChampEvent(title.getText().toString(), description.getText().toString(),
                 address.getText().toString(), date.getText().toString(), time.getText().toString(),
                 BitMapToString(bitmap));

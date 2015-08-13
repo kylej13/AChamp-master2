@@ -21,6 +21,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.facebook.appevents.AppEventsLogger;
+import com.google.android.gms.maps.MapFragment;
+
 import java.util.Calendar;
 
 import achamp.project.org.achamp.AddingFriends.AddFriends_Fragment;
@@ -57,7 +60,7 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
     private static final int NUM_ITEMS = 3;
 
 
-    public static final String myurl = "http://" + "172.31.164.234" + ":3000";
+    public static final String myurl = "http://" + "172.16.117.191" + ":3000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,9 +111,20 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Logs 'app deactivate' App Event.
+        //AppEventsLogger.deactivateApp(this);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         new ATask().execute();
+
+        // Logs 'install' and 'app activate' App Events.
+        //AppEventsLogger.activateApp(this);
     }
 
     //@Override
@@ -153,6 +167,12 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
                 if(tempListFrag !=  null)
                 {
                     tempListFrag.addNewData(data);
+                }
+
+                MapFragment mapFragment = (MapFragment) fm.findFragmentByTag("map");
+
+                if(mapFragment != null){
+                    //mapFragment.addNewData(data);
                 }
             }
         });

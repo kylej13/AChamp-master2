@@ -1,6 +1,9 @@
 package achamp.project.org.achamp.ViewingEvents;
 
 import android.app.Activity;
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,10 +12,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import achamp.project.org.achamp.AChampEvent;
 import achamp.project.org.achamp.R;
 import achamp.project.org.achamp.ViewingEvents.fragments.ListFrag;
 
@@ -21,8 +29,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -42,12 +55,17 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
     private ListView events;
     private Button viewMap;
     private Button viewList;
+    private EditText search;
 
     private Boolean mapChecked;
     private Boolean listChecked;
     private int miles;
+    private LinearLayout l;
+    private Button go;
 
     private View view;
+    private ArrayList<AChampEvent> temp;
+    private LatLng currLoc;
 
     private FragmentManager fm;
 
@@ -93,11 +111,11 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         mapChecked = true;
         listChecked = false;
 
         miles = 10;
+        temp = new ArrayList<AChampEvent>();
     }
 
     @Override
@@ -108,12 +126,23 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
         View v = inflater.inflate(R.layout.fragment_view_events_, container, false);
         viewMap = (Button) v.findViewById(R.id.view_map);
         viewList = (Button) v.findViewById(R.id.view_list);
+        go = (Button) v.findViewById(R.id.go);
+        l = (LinearLayout) v.findViewById(R.id.container);
+        search = (EditText) v.findViewById(R.id.search);
         viewMap.setOnClickListener(this);
         viewList.setOnClickListener(this);
+        go.setOnClickListener(this);
         view = v;
 
-        createMap();
+
         return v;
+    }
+
+    @Override
+    public void onResume(){
+
+        super.onResume();
+        createMap();
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -181,6 +210,21 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
             viewMap.setBackgroundColor(getResources().getColor(R.color.Gray));
             displayList();
         }
+
+        if(v == go && !search.getText().toString().equals("")){
+            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            Address temp = getAddress(search.getText().toString());
+            if(temp != null){
+
+                LatLng c = new LatLng(temp.getLatitude(), temp.getLongitude());
+                Log.d("finderror", "loc: " + c);
+                if(map != null && c != null) {
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(c, 15));
+                    map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+                }
+            }
+        }
     }
 
     public void createMap() {
@@ -198,8 +242,49 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
         getActivity().getFragmentManager().beginTransaction().add(R.id.container, mfrag, TAG_MAP).commit();
         mfrag.getMapAsync(this);
 
+        Geocoder geocoder = new Geocoder(l.getContext());
+        /*List<Address> gotAddresses = null;
+        try {
+            gotAddresses = geocoder.getFromLocationName("", 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Address address = (Address) gotAddresses.get(0);
+
+        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+
+        String properAddress = String.format("%s, %s",
+                address.getMaxAddressLineIndex() > 0 ? address.getAddressLine(0) : "",
+                address.getCountryName());
+
+        map.addMarker(new MarkerOptions()
+                .position(new LatLng(address.getLatitude(), address.getLongitude())).draggable(true)
+                .title(properAddress));
+    */
     }
 
+    private Address getAddress(String s) {
+        Geocoder geocoder = new Geocoder(getActivity().getBaseContext());
+        List<Address> gotAddresses = null;
+        try {
+            gotAddresses = geocoder.getFromLocationName(s, 1);
+            Log.d("finderror", "gotAddresses: " + gotAddresses);
+            if(gotAddresses.size() > 0 && gotAddresses.get(0) != null) {
+                Log.d("finderror", "gotAddresses: " + gotAddresses.get(0));
+                return gotAddresses.get(0);
+            }
+            else{
+                CharSequence text = "Please enter a valid location";
+                Toast toast= Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+            return null;
+    }
 
     private void displayList() {
         listFrag = getActivity().getFragmentManager().findFragmentByTag(TAG_LISTFRAG);
@@ -214,10 +299,9 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
 
     }
 
-
-
     @Override
     public void onMapReady(GoogleMap map) {
+        this.map = map;
         Log.d("main", "is in the not null");
         Marker bburg = map.addMarker(new MarkerOptions().position(BLACKSBURG)
                 .title("Blacksburg"));
@@ -227,7 +311,37 @@ public class ViewEvents_Fragment extends Fragment implements View.OnClickListene
         map.getUiSettings().setAllGesturesEnabled(true);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(BLACKSBURG, 15));
         map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+        Log.d("findNull", "map.getMyLocation: " + map.getMyLocation());
+        Log.d("findNull", "map: " + map);
+        if(map != null && map.getMyLocation() != null) {
+            currLoc = new LatLng(map.getMyLocation().getLatitude(), map.getMyLocation().getLongitude());
+            addMarkers();
+        }
+
     }
+
+    private void addMarkers() {
+        LatLngBounds bounds = map.getProjection().getVisibleRegion().latLngBounds;
+        for(int x = 0; x<temp.size(); x++){
+            LatLng curr = new LatLng(temp.get(x).getAddressLoc().getLatitude(), temp.get(x).getAddressLoc().getLongitude());
+            if(bounds.contains(curr)){
+                Marker m = map.addMarker(new MarkerOptions().position(curr)
+                        .title(temp.get(x).getTitle()));
+
+            }
+        }
+
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                //marker.
+                return true;
+            }
+        });
+
+    }
+
 
 
 }

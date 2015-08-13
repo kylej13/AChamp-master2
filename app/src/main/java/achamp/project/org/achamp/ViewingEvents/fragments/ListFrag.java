@@ -3,6 +3,7 @@ package achamp.project.org.achamp.ViewingEvents.fragments;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -27,7 +28,6 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
-//import com.example.kylej.connectme.fragments.FragMap.OnFragmentInteractionListener;
 
 
 public class ListFrag extends Fragment {
@@ -45,6 +45,7 @@ public class ListFrag extends Fragment {
 
     private ListView list;
     private SwipeRefreshLayout refreshList;
+    private Context context;
 
     private SeekBar seekBar;
     private int miles;
@@ -80,6 +81,7 @@ public class ListFrag extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        context = getActivity().getApplicationContext();
 
     }
 
@@ -130,8 +132,26 @@ public class ListFrag extends Fragment {
         list.setAdapter(adapter);
         // Inflate the layout for this fragment
 
+        //AChampEvent event = new AChampEvent("title", "discription", "Address", "Date", "time", null);
+        //temp.add(event);
+        //addEvents();
+
         return view;
     }
+
+    /*private void addEvents() {
+
+        for(int x = 0; x< temp.size(); x++){
+            AChampEvent curr = temp.get(x);
+            ViewGroup v = (ViewGroup) list.getParent();
+            Context c = list.getContext();
+            LayoutInflater inflater = (LayoutInflater)c.getSystemService
+                    (Context.LAYOUT_INFLATER_SERVICE);
+            inflater.inflate(R.layout.event_list, v, false);
+        }
+    }
+
+    */
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -168,7 +188,7 @@ public class ListFrag extends Fragment {
         refreshList.setRefreshing(false);
     }
 
-    public class EventEntry{
+    /*public class EventEntry{
 
         public String eventName;
         public String eventDate;
@@ -184,7 +204,7 @@ public class ListFrag extends Fragment {
             this.address = address;
         }
 
-    }
+    }*/
 
     private class EventEntryAdapter extends ArrayAdapter<AChampEvent> implements
             View.OnClickListener {
@@ -244,7 +264,9 @@ public class ListFrag extends Fragment {
             if (((String[]) view.getTag())[1] == "more") {
 
 
-                //Send to event page
+                //Intent i = new Intent(context, AChampEvent.class);
+                //startActivity(i);
+                //getFragmentManager().beginTransaction().remove(getFragmentManager().findFragmentByTag("list")).commit();
 
             }
         }

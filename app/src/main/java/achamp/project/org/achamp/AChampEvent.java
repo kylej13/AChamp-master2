@@ -1,5 +1,14 @@
 package achamp.project.org.achamp;
 
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
+
+import com.google.android.gms.maps.model.LatLng;
+
+import java.io.IOException;
+import java.util.List;
+
 /**
  * Created by Nima on 8/4/2015.
  */
@@ -19,29 +28,31 @@ public class AChampEvent {
     private String beginingDate;
     private String beginingTime;
     private String picture;
+    private Address addressLoc;
 
-    public AChampEvent()
-    {
+    public AChampEvent() {
         title = null;
         description = null;
         address = null;
         beginingDate = null;
         beginingTime = null;
         picture = null;
+        addressLoc = null;
     }
 
-    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, String picture)
-    {
+    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, String picture) {
         this.title = title;
         this.description = description;
         this.address = address;
         this.beginingDate = beginingDate;
         this.beginingTime = beginingTime;
         this.picture = picture;
+        this.addressLoc = addressLoc;
     }
 
-
-    public String getTitle() {return title;}
+    public String getTitle() {
+        return title;
+    }
 
     public String getDescription() {
         return description;
@@ -59,6 +70,7 @@ public class AChampEvent {
         return beginingTime;
     }
 
-    public String getPicture(){return picture; }
+    public String getPicture() { return picture; }
 
+    public Address getAddressLoc() { return addressLoc; }
 }

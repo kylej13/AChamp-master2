@@ -1,10 +1,13 @@
 package achamp.project.org.achamp.ViewingEvents;
 
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Handler;
 import android.util.JsonReader;
 import android.util.Log;
 
 import org.json.JSONException;
+import achamp.project.org.achamp.MainActivity;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +15,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import achamp.project.org.achamp.AChampEvent;
@@ -116,7 +120,6 @@ public class ViewEvents_Task implements Runnable{
         }
         return null;
     }
-
 
     @Override
     public void run() {

@@ -1,12 +1,23 @@
 package achamp.project.org.achamp.ViewingEvents.fragments;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+import achamp.project.org.achamp.AChampEvent;
 import achamp.project.org.achamp.MainActivity;
 import achamp.project.org.achamp.R;
+import achamp.project.org.achamp.ViewingEvents.ViewEvents_Task;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -16,6 +27,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+
 /**
  * A fragment that launches other parts of the demo application.
  */
@@ -23,6 +36,8 @@ public class MapFragment extends Fragment {
 
     MapView mMapView;
     private GoogleMap googleMap;
+    private ArrayList<AChampEvent> temp;
+    private EventEntryAdapter adapter;
 
     public static MapFragment newInstance(){
         return new MapFragment();
@@ -37,6 +52,7 @@ public class MapFragment extends Fragment {
         mMapView = (MapView) v.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
 
+        adapter = new EventEntryAdapter(getActivity().getApplicationContext(), temp);
         mMapView.onResume();// needed to get the map to display immediately
 
         try {
@@ -69,6 +85,13 @@ public class MapFragment extends Fragment {
         return v;
     }
 
+
+    public void addNewData(ViewEvents_Task.EventsData data) {
+        if (data.entries != null) {
+            adapter.clear();
+            adapter.addAll((ArrayList<AChampEvent>)data.entries);
+        }
+    }
     @Override
     public void onResume() {
         super.onResume();
@@ -91,5 +114,72 @@ public class MapFragment extends Fragment {
     public void onLowMemory() {
         super.onLowMemory();
         mMapView.onLowMemory();
+    }
+
+    private class EventEntryAdapter extends ArrayAdapter<AChampEvent> implements
+            View.OnClickListener {
+        private final Context context;
+        //values that will be displayed
+        private final ArrayList<AChampEvent> values;
+
+
+        public EventEntryAdapter(Context context, ArrayList<AChampEvent> values) {
+            super(context, R.layout.event_list, values);
+            this.context = context;
+            this.values = values;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            LayoutInflater inflater = (LayoutInflater) context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            View rowView = inflater.inflate(R.layout.event_list,
+                    parent, false);
+
+            TextView nameEntry = (TextView) rowView.findViewById(R.id.eventName);
+            TextView dateEntry = (TextView) rowView.findViewById(R.id.date);
+            TextView timeEntry = (TextView) rowView.findViewById(R.id.time);
+            TextView addressEntry = (TextView) rowView.findViewById(R.id.address);
+            ImageButton image = (ImageButton) rowView.findViewById(R.id.imageView);
+
+            nameEntry.setText(values.get(position).getTitle());
+            dateEntry.setText(values.get(position).getBeginingDate());
+            timeEntry.setText(values.get(position).getBeginingTime());
+            addressEntry.setText(values.get(position).getAddress());
+            image.setImageBitmap(StringToBitMap(values.get(position).getPicture()));
+
+
+            // The code below sets tags to your buttons so that you can detect which one was pressed
+
+            return rowView;
+        }
+
+        private Bitmap StringToBitMap(String encodedString){
+            try{
+                byte [] encodeByte= Base64.decode(encodedString, Base64.DEFAULT);
+                Bitmap bitmap= BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+                return bitmap;
+            }catch(Exception e){
+                e.getMessage();
+                return null;
+            }
+        }
+
+        @Override
+        public void onClick(View view) {
+            // TODO Auto-generated method stub
+
+            if (((String[]) view.getTag())[1] == "more") {
+
+
+                //Intent i = new Intent(context, AChampEvent.class);
+                //startActivity(i);
+                //getFragmentManager().beginTransaction().remove(getFragmentManager().findFragmentByTag("list")).commit();
+
+            }
+        }
+
     }
 }
