@@ -97,7 +97,12 @@ public class ListFrag extends Fragment {
         refreshList.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mListener.onRefreshRequested();
+                ArrayList<String> idArray = new ArrayList<String>();
+                for(AChampEvent event: temp)
+                {
+                    idArray.add(event.get_id());
+                }
+                mListener.onRefreshRequested(idArray);
             }
         });
 
@@ -160,10 +165,18 @@ public class ListFrag extends Fragment {
     }
 
     public void addNewData(ViewEvents_Task.EventsData data) {
-        if (data.entries != null) {
-            adapter.clear();
-            adapter.addAll((ArrayList<AChampEvent>)data.entries);
-            list.invalidate();
+        ArrayList<AChampEvent> entries = data.entries;
+        if (entries != null) {
+            for(AChampEvent event : entries)
+            {
+                if(!temp.contains(event))
+                {
+                    temp.add(0, event);
+                }
+            }
+            adapter.notifyDataSetChanged();
+            list.smoothScrollByOffset(0);
+            //list.invalidate();
         }
         refreshList.setRefreshing(false);
     }
@@ -218,23 +231,12 @@ public class ListFrag extends Fragment {
             dateEntry.setText(values.get(position).getBeginingDate());
             timeEntry.setText(values.get(position).getBeginingTime());
             addressEntry.setText(values.get(position).getAddress());
-            image.setImageBitmap(StringToBitMap(values.get(position).getPicture()));
+            image.setImageBitmap(values.get(position).getPicture());
 
 
             // The code below sets tags to your buttons so that you can detect which one was pressed
 
             return rowView;
-        }
-
-        private Bitmap StringToBitMap(String encodedString){
-            try{
-                byte [] encodeByte= Base64.decode(encodedString, Base64.DEFAULT);
-                Bitmap bitmap= BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-                return bitmap;
-            }catch(Exception e){
-                e.getMessage();
-                return null;
-            }
         }
 
         @Override
@@ -253,7 +255,7 @@ public class ListFrag extends Fragment {
 
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onRefreshRequested();
+        public void onRefreshRequested(ArrayList<String> idArray);
     }
 
 }

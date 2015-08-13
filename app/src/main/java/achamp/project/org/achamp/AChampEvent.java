@@ -1,5 +1,7 @@
 package achamp.project.org.achamp;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by Nima on 8/4/2015.
  */
@@ -18,7 +20,8 @@ public class AChampEvent {
     private String address;
     private String beginingDate;
     private String beginingTime;
-    private String picture;
+    private String _id;
+    private Bitmap picture;
 
     public AChampEvent()
     {
@@ -28,9 +31,10 @@ public class AChampEvent {
         beginingDate = null;
         beginingTime = null;
         picture = null;
+        _id = null;
     }
 
-    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, String picture)
+    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, Bitmap picture)
     {
         this.title = title;
         this.description = description;
@@ -38,6 +42,18 @@ public class AChampEvent {
         this.beginingDate = beginingDate;
         this.beginingTime = beginingTime;
         this.picture = picture;
+
+    }
+
+    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, Bitmap picture, String _id)
+    {
+        this.title = title;
+        this.description = description;
+        this.address = address;
+        this.beginingDate = beginingDate;
+        this.beginingTime = beginingTime;
+        this.picture = picture;
+        this._id = _id;
     }
 
 
@@ -59,6 +75,24 @@ public class AChampEvent {
         return beginingTime;
     }
 
-    public String getPicture(){return picture; }
+    public Bitmap getPicture(){return picture; }
 
+    public String get_id() {return _id;}
+
+    @Override
+    public boolean equals(Object o) {
+        if(o == null)
+        {
+            return false;
+        }
+        else if(!o.getClass().equals(AChampEvent.class))
+        {
+            return false;
+        }
+        else if(this._id.equals(((AChampEvent)o)._id))
+        {
+            return true;
+        }
+        return false;
+    }
 }

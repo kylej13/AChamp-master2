@@ -235,19 +235,19 @@ public class CreateEvents_Fragment extends Fragment implements View.OnClickListe
 
     private AChampEvent readyToPost()
     {
-        Bitmap bitmap = ((BitmapDrawable)aChampPicture.getDrawable()).getBitmap();
+        Bitmap bitmap;
+        if(aChampPicture.getDrawable() != null) {
+           bitmap = ((BitmapDrawable) aChampPicture.getDrawable()).getBitmap();
+        }
+        else
+        {
+            bitmap =null;
+        }
         return new AChampEvent(title.getText().toString(), description.getText().toString(),
                 address.getText().toString(), date.getText().toString(), time.getText().toString(),
-                BitMapToString(bitmap));
+                bitmap);
     }
 
-    private String BitMapToString(Bitmap bitmap){
-        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
-        byte [] b=baos.toByteArray();
-        String temp= Base64.encodeToString(b, Base64.DEFAULT);
-        return temp;
-    }
 
     /**
      * This interface must be implemented by activities that contain this

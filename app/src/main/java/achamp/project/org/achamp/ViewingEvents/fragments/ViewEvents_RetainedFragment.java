@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import achamp.project.org.achamp.R;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Task;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Thread;
@@ -118,12 +120,12 @@ public class ViewEvents_RetainedFragment extends Fragment {
         public void eventsUpdated(ViewEvents_Task.EventsData data);
     }
 
-    public void onRefreshEvents(String cookie, String user)
+    public void onRefreshEvents(String cookie, String user, ArrayList<String> array)
     {
         Log.d("Achamp", "onRefreshEvents");
         if(thread.isAlive()) {
             Log.d("Achamp:RetainedFragment", "IsAlive");
-            thread.enqueueViewEventsTask(new ViewEvents_Task());
+            thread.enqueueViewEventsTask(new ViewEvents_Task(array, user));
             //thread.enqueueMessageTask(new MessageTask("message", new Handler()));
         }
     }
