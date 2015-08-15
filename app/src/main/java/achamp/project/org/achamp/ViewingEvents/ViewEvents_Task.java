@@ -1,17 +1,27 @@
 package achamp.project.org.achamp.ViewingEvents;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Handler;
+import android.util.Base64;
 import android.util.JsonReader;
 import android.util.Log;
+import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+
 import achamp.project.org.achamp.MainActivity;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -28,9 +38,15 @@ public class ViewEvents_Task implements Runnable{
 
     private ArrayList entries;
     private EventsData pdata;
+    private String user;
+    private ArrayList<String> idArray;
+    private Context context;
 
-    public ViewEvents_Task()
+    public ViewEvents_Task(ArrayList<String> idArray, String user, Context context)
     {
+        this.user = user;
+        this.context = context;
+        this.idArray = idArray;
     }
 
 
@@ -40,15 +56,39 @@ public class ViewEvents_Task implements Runnable{
         InputStream is = null;
 
         try {
-            HttpURLConnection conn = (HttpURLConnection) ((new URL(MainActivity.myurl+"/giveall").openConnection()));
+            HttpURLConnection conn = (HttpURLConnection) ((new URL(MainActivity.myurl + "/givefuture").openConnection()));
             conn.setReadTimeout(10000 /* milliseconds */);
             conn.setConnectTimeout(15000 /* milliseconds */);
-            //conn.setRequestProperty("Cookie", cookie);
+            conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Accept", "application/json");
             conn.setRequestMethod("GET");
             conn.connect();
 
+            JSONArray jsonArray = new JSONArray();
+            //            int number = 0;
+                    //            for(String id:idArray) {
+                            //                JSONObject idJson = new JSONObject();
+                                    //                idJson.put("_id", id);
+                                            //                jsonArray.put(number,idJson);
+                                                    //                number;
+                                                            //            }
+                                                                    //            Log.d("Achamp", "this is what gets sent JSON:"  jsonArray.toString());
+                                                                            //            // posting it
+                                                                                    //            Writer wr = new OutputStreamWriter(conn.getOutputStream());
+                                                                                            //
+                                                                                                    //            wr.write(jsonArray.toString());
+                                                                                                            //            wr.flush();
+                                                                                                                    //            wr.close();
+                                                                                                                            
+                                                                                                                                                JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("username", this.user);
+                        Writer wr = new OutputStreamWriter(conn.getOutputStream());
+            
+                                wr.write(jsonObject.toString());
+                        wr.flush();
+                        wr.close();
+            
 
             // handling the response
             StringBuilder sb = new StringBuilder();
@@ -60,6 +100,7 @@ public class ViewEvents_Task implements Runnable{
             JsonReader reader = new JsonReader(new InputStreamReader(is, "UTF-8"));
             entries = new ArrayList<>();
             reader.beginArray();
+            int count = 0;
             while (reader.hasNext()) {
                 entries.add(convertToEvents(reader));
             }
@@ -90,6 +131,7 @@ public class ViewEvents_Task implements Runnable{
         String beginingTime = "";
         String address = "";
         String picture = "";
+        Address addr = null;
 
         reader.beginObject();
         while (reader.hasNext()) {
@@ -98,6 +140,10 @@ public class ViewEvents_Task implements Runnable{
                 title = reader.nextString();
             } else if (name.equals(AChampEvent.EXTRA_ADDRRESS)) {
                 address = reader.nextString();
+                if(!address.equals("")){
+                    addr = convertToAddresss(address);
+
+                }
             } else if (name.equals(AChampEvent.EXTRA_DESCRIPTION)) {
                 description = reader.nextString();
             } else if (name.equals(AChampEvent.EXTRA_BEGININGDATE)) {
@@ -116,10 +162,38 @@ public class ViewEvents_Task implements Runnable{
         }
         reader.endObject();
         if (_id != null) {
-            return new AChampEvent(title,description,address,beginingDate,beginingTime,picture);
+            return new AChampEvent(title,description,address,beginingDate,beginingTime,StringToBitMap(picture), _id, addr);
         }
         return null;
     }
+
+    private Address convertToAddresss(String string) {
+        Geocoder geocoder = new Geocoder(context);
+        List<Address> gotAddresses = null;
+        try {
+            gotAddresses = geocoder.getFromLocationName(string, 1);
+            Log.d("finderror", "gotAddresses: " + gotAddresses);
+            if(gotAddresses.size() > 0 && gotAddresses.get(0) != null) {
+                Log.d("finderror", "gotAddresses: " + gotAddresses.get(0));
+                return gotAddresses.get(0);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private Bitmap StringToBitMap(String encodedString){
+                try{
+                        byte [] encodeByte= Base64.decode(encodedString, Base64.DEFAULT);
+                        Bitmap bitmap= BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+                        return bitmap;
+                    }catch(Exception e){
+                        e.getMessage();
+                        return null;
+                    }
+            }
 
     @Override
     public void run() {

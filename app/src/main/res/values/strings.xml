@@ -3,7 +3,6 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
@@ -17,4 +16,6 @@
     <color name="WHITE">#ffffff</color>
     <color name="GRAY">#d3d3d3</color>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_event_page">EventPage</string>
 </resources>

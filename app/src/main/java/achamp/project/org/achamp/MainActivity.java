@@ -1,41 +1,49 @@
 package achamp.project.org.achamp;
 
 
-import android.app.DialogFragment;
-import android.support.v4.app.FragmentTransaction;
-import android.app.Activity;
-import android.app.Fragment;
-import android.net.Uri;
-import android.support.v4.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
 
-import java.util.Calendar;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 
 import achamp.project.org.achamp.AddingFriends.AddFriends_Fragment;
 import achamp.project.org.achamp.CreatingEvents.CreateEvents_Fragment;
 import achamp.project.org.achamp.CreatingEvents.PostingEvent_RetainedFragment;
+import achamp.project.org.achamp.Login.LoginActivity;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Fragment;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Task;
 import achamp.project.org.achamp.ViewingEvents.fragments.ListFrag;
 import achamp.project.org.achamp.ViewingEvents.fragments.ViewEvents_RetainedFragment;
 
 public class MainActivity extends FragmentActivity implements AddFriends_Fragment.OnFragmentInteractionListener, ViewEvents_Fragment.OnFragmentInteractionListener,
-        CreateEvents_Fragment.OnFragmentInteractionListener,PostingEvent_RetainedFragment.OnFragmentInteractionListener, ViewEvents_RetainedFragment.OnFragmentInteractionListener, ListFrag.OnFragmentInteractionListener{
+        CreateEvents_Fragment.OnFragmentInteractionListener,PostingEvent_RetainedFragment.OnFragmentInteractionListener,
+        ViewEvents_RetainedFragment.OnFragmentInteractionListener, ListFrag.OnFragmentInteractionListener {
 
     private static final String DEMO_TAG = "demo_tag";
     private static final String POST_EVENT_TAG = "post_event_tag";
@@ -53,6 +61,7 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
 
     private FragmentAdapter fAdapter;
     private ViewPager vPager;
+    private LatLng currLoc;
 
     private final Handler handler = new Handler();
 
@@ -121,10 +130,14 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
     @Override
     protected void onResume() {
         super.onResume();
-        new ATask().execute();
+
+        SharedPreferences prefs = getSharedPreferences("usersession", MODE_PRIVATE);
+        String username = prefs.getString("username", "");
+        String password = prefs.getString("password", "");
+
+        new ATask().execute(username, password);
 
         // Logs 'install' and 'app activate' App Events.
-        //AppEventsLogger.activateApp(this);
     }
 
     //@Override
@@ -156,22 +169,30 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
 
     }
 
+
     @Override
     public void eventsUpdated(final ViewEvents_Task.EventsData data) {
         Toast.makeText(getApplication(), "number of events = " + data.entries.size(), Toast.LENGTH_LONG).show();
+
+
+        if (data.entries == null) {
+            Toast.makeText(getApplication(), "Couldn't refresh", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplication(), "number of events = " + data.entries.size(), Toast.LENGTH_LONG).show();
+        }
         handler.post(new Runnable() {
             @Override
             public void run() {
                 ListFrag tempListFrag = (ListFrag) fm.findFragmentByTag("list");
 
-                if(tempListFrag !=  null)
-                {
+                if (tempListFrag != null) {
                     tempListFrag.addNewData(data);
                 }
 
                 MapFragment mapFragment = (MapFragment) fm.findFragmentByTag("map");
 
-                if(mapFragment != null){
+                if (mapFragment != null) {
+
                     //mapFragment.addNewData(data);
                 }
             }
@@ -179,15 +200,40 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
 
     }
 
-    private class ATask extends AsyncTask<Void, Void, Void> {
+    @Override
+    public ArrayList<AChampEvent> getEvents() {
+        viewEvents_RF = (ViewEvents_RetainedFragment) fm.findFragmentByTag(VIEW_EVENT_RF_TAG);
+        if (viewEvents_RF != null) {
+            return viewEvents_RF.getEvents();
+
+        }
+        return null;
+    }
+
+    @Override
+    public LatLng getCurrLoc() {
+        return currLoc;
+    }
+
+
+    private class ATask extends AsyncTask<String, String, Void> {
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(String... params) {
 
             // TODO check to see if the credentials are correct, if yes then enter else have to enetr credentials
             try {
-                Thread.sleep(2000);
-                initMainActivityFragment();
+                Thread.sleep(1000);
+                if (login(params[0], params[1]).equals("Not Logged In")) {
+                    Intent newIntent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivityForResult(newIntent, 5);
+                } else {
+                    initMainActivityFragment();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -269,8 +315,81 @@ public class MainActivity extends FragmentActivity implements AddFriends_Fragmen
     }
 
     @Override
-    public void onRefreshRequested() {
+    public void onRefreshRequested(ArrayList<String> array) {
         Log.d("Achamp", "onRefreshRequested()");
-        viewEvents_RF.onRefreshEvents("","");
+        SharedPreferences prefs = getSharedPreferences("usersession", MODE_PRIVATE);
+        String username = prefs.getString("username", "");
+        viewEvents_RF.onRefreshEvents("", username, array);
+    }
+
+    @Override
+    public void setCurrLoc(LatLng curr) {
+        currLoc = curr;
+    }
+
+    private String login(String username, String password) throws IOException, JSONException {
+
+        InputStream is = null;
+        String cookie = "Not Logged In";
+        try {
+            HttpURLConnection conn = (HttpURLConnection) ((new URL(MainActivity.myurl + "/login").openConnection()));
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestMethod("POST");
+            conn.connect();
+
+
+            JSONObject cred = new JSONObject();
+            cred.put("username", username);
+            cred.put("password", password);
+            Log.d("Achamp", "this is what gets sent JSON:" + cred.toString());
+            // posting it
+            Writer wr = new OutputStreamWriter(conn.getOutputStream());
+
+            wr.write(cred.toString());
+            wr.flush();
+            wr.close();
+            Log.d("Achamp", " response from the server is" + conn.getResponseCode());
+            // handling the response
+            StringBuilder sb = new StringBuilder();
+            int HttpResult = conn.getResponseCode();
+            is = conn.getResponseCode() >= 400 ? conn.getErrorStream() : conn.getInputStream();
+
+            if (HttpResult == HttpURLConnection.HTTP_OK) {
+                Log.d("Achamp", "cookies: Login HTTP_OK");
+
+                cookie = "Logged In Successfully";
+                //                Map<String, List<String>> headerFields = conn.getHeaderFields();
+                //                //COOKIES_HEADER
+                //                List<String> cookiesHeader = headerFields.get("Set-Cookie");
+                //
+                //                //  for (String s : cookiesHeader) {
+                //
+                //                Log.d("hw4", "cookies: "  cookiesHeader.get(0).substring(0, cookiesHeader.get(0).indexOf(";")));
+                //
+                //                cookie = cookiesHeader.get(0).substring(0, cookiesHeader.get(0).indexOf(";"));
+                //
+
+            }
+
+            // Makes sure that the InputStream is closed after the app is
+            // finished using it.
+        } catch (Exception e) {
+
+            Log.d("vt", " and the exception is " + e);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+        return cookie;
+    }
+
+    @Override
+    public Context getMainContext(){
+
+        return getApplicationContext();
     }
 }
+

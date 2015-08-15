@@ -56,7 +56,7 @@ public class PostingEvent_RetainedFragment extends Fragment {
 
     public void OnResult( boolean result)
     {
-       // mListener.ToastUploadingResult(result);
+        mListener.ToastUploadingResult(result);
     }
 
 

@@ -1,6 +1,7 @@
 package achamp.project.org.achamp;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
 
@@ -27,8 +28,9 @@ public class AChampEvent {
     private String address;
     private String beginingDate;
     private String beginingTime;
-    private String picture;
     private Address addressLoc;
+    private String _id;
+    private Bitmap picture;
 
     public AChampEvent() {
         title = null;
@@ -38,15 +40,27 @@ public class AChampEvent {
         beginingTime = null;
         picture = null;
         addressLoc = null;
+        _id = null;
     }
 
-    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, String picture) {
+    public AChampEvent(String title, String description, String address, String beginningDate, String beginningTime, Bitmap picture) {
+        this.title = title;
+        this.description = description;
+        this.address = address;
+        this.beginingDate = beginningDate;
+        this.beginingTime = beginningTime;
+        this.picture = picture;
+        this.addressLoc = addressLoc;
+    }
+
+    public AChampEvent(String title, String description, String address, String beginingDate, String beginingTime, Bitmap picture, String _id, Address addressLoc) {
         this.title = title;
         this.description = description;
         this.address = address;
         this.beginingDate = beginingDate;
         this.beginingTime = beginingTime;
         this.picture = picture;
+        this._id = _id;
         this.addressLoc = addressLoc;
     }
 
@@ -70,7 +84,27 @@ public class AChampEvent {
         return beginingTime;
     }
 
-    public String getPicture() { return picture; }
+    public Bitmap getPicture(){return picture; }
+    public String get_id() {return _id;}
+
+        @Override
+        public boolean equals(Object o) {
+                if(o == null)
+                    {
+                                return false;
+                }
+                else if(!o.getClass().equals(AChampEvent.class))
+                    {
+                                return false;
+                }
+                else if(this._id.equals(((AChampEvent)o)._id))
+                    {
+                                return true;
+                }
+                return false;
+            }
 
     public Address getAddressLoc() { return addressLoc; }
+
+    public void setAddressLoc(Address a){ addressLoc = a; }
 }

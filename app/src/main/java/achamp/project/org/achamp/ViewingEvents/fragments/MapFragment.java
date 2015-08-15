@@ -1,5 +1,6 @@
 package achamp.project.org.achamp.ViewingEvents.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
  */
 public class MapFragment extends Fragment {
 
+
     MapView mMapView;
     private GoogleMap googleMap;
     private ArrayList<AChampEvent> temp;
@@ -46,7 +48,6 @@ public class MapFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // inflat and return the layout
-        MainActivity m = (MainActivity) getActivity();
         View v = inflater.inflate(R.layout.fragment_location_info, container,
                 false);
         mMapView = (MapView) v.findViewById(R.id.mapView);
@@ -92,6 +93,8 @@ public class MapFragment extends Fragment {
             adapter.addAll((ArrayList<AChampEvent>)data.entries);
         }
     }
+
+
     @Override
     public void onResume() {
         super.onResume();
@@ -148,7 +151,7 @@ public class MapFragment extends Fragment {
             dateEntry.setText(values.get(position).getBeginingDate());
             timeEntry.setText(values.get(position).getBeginingTime());
             addressEntry.setText(values.get(position).getAddress());
-            image.setImageBitmap(StringToBitMap(values.get(position).getPicture()));
+            image.setImageBitmap(values.get(position).getPicture());
 
 
             // The code below sets tags to your buttons so that you can detect which one was pressed
@@ -182,4 +185,5 @@ public class MapFragment extends Fragment {
         }
 
     }
+
 }

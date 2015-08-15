@@ -5,22 +5,16 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
-import android.location.Address;
-import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,9 +31,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.List;
-
-import javax.xml.transform.Result;
 
 import achamp.project.org.achamp.AChampEvent;
 import achamp.project.org.achamp.R;
@@ -238,13 +229,15 @@ public class CreateEvents_Fragment extends Fragment implements View.OnClickListe
 
     private AChampEvent readyToPost()
     {
-        Bitmap bitmap = null;
-        if(aChampPicture != null) {
+        Bitmap bitmap;
+        if (aChampPicture.getDrawable() != null) {
             bitmap = ((BitmapDrawable) aChampPicture.getDrawable()).getBitmap();
+        } else {
+            bitmap = null;
         }
         return new AChampEvent(title.getText().toString(), description.getText().toString(),
-                address.getText().toString(), date.getText().toString(), time.getText().toString(),
-                BitMapToString(bitmap));
+                address.getText().toString(), date.getText().toString(), time.getText().toString(), bitmap);
+
     }
 
     private String BitMapToString(Bitmap bitmap){

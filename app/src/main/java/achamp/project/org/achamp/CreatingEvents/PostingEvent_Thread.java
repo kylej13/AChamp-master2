@@ -1,13 +1,16 @@
 package achamp.project.org.achamp.CreatingEvents;
 
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.ActionBar;
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -88,8 +91,7 @@ public class PostingEvent_Thread extends Thread {
         entry.put(AChampEvent.EXTRA_BEGININGDATE, event.getBeginingDate());
         entry.put(AChampEvent.EXTRA_BEGININGTIME, event.getBeginingTime());
         entry.put(AChampEvent.EXTRA_DESCRIPTION, event.getDescription());
-        entry.put(AChampEvent.EXTRA_PICTURE, event.getPicture());
-
+        entry.put(AChampEvent.EXTRA_PICTURE, BitMapToString(event.getPicture()));
         Writer wr = new OutputStreamWriter(conn.getOutputStream());
 
         wr.write(entry.toString());
@@ -104,4 +106,16 @@ public class PostingEvent_Thread extends Thread {
         }
 
     }
+
+    private String BitMapToString(Bitmap bitmap){
+                if(bitmap == null)
+                    {
+                                    return "";
+                }
+                ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
+                byte [] b=baos.toByteArray();
+                String temp= Base64.encodeToString(b, Base64.DEFAULT);
+                return temp;
+           }
 }

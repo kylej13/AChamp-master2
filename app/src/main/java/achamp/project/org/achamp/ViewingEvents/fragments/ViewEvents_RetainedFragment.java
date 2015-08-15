@@ -10,6 +10,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
+import achamp.project.org.achamp.AChampEvent;
 import achamp.project.org.achamp.R;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Task;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Thread;
@@ -31,6 +34,8 @@ public class ViewEvents_RetainedFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private ArrayList<AChampEvent> allAchamp;
 
     private ViewEvents_Thread thread;
 
@@ -74,6 +79,7 @@ public class ViewEvents_RetainedFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        allAchamp = new ArrayList<AChampEvent>();
     }
 
     @Override
@@ -101,6 +107,13 @@ public class ViewEvents_RetainedFragment extends Fragment {
     }
 
     public void onUpdateEvents(ViewEvents_Task.EventsData data) {
+
+        Log.d("findErr", "Arraylist passed to onUpdateEvents= " + data.entries);
+        for(AChampEvent e: (ArrayList<AChampEvent>) data.entries){
+
+            Log.d("findErr", "current Event = " + e.getTitle());
+            allAchamp.add(e);
+        }
         mListener.eventsUpdated(data);
     }
 
@@ -118,14 +131,20 @@ public class ViewEvents_RetainedFragment extends Fragment {
         public void eventsUpdated(ViewEvents_Task.EventsData data);
     }
 
-    public void onRefreshEvents(String cookie, String user)
+    public void onRefreshEvents(String cookie, String user, ArrayList<String> array)
     {
         Log.d("Achamp", "onRefreshEvents");
         if(thread.isAlive()) {
             Log.d("Achamp:RetainedFragment", "IsAlive");
-            thread.enqueueViewEventsTask(new ViewEvents_Task());
+            thread.enqueueViewEventsTask(new ViewEvents_Task(array, user, getActivity()));
             //thread.enqueueMessageTask(new MessageTask("message", new Handler()));
         }
+    }
+
+    public ArrayList<AChampEvent> getEvents(){
+
+        Log.d("findErr", "arrayList= " + allAchamp);
+        return allAchamp;
     }
 
 }

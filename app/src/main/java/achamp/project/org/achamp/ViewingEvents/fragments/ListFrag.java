@@ -6,10 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,12 +22,14 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import achamp.project.org.achamp.EventPage;
 import achamp.project.org.achamp.R;
 import achamp.project.org.achamp.AChampEvent;
 import achamp.project.org.achamp.ViewingEvents.ViewEvents_Task;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 
@@ -50,6 +54,8 @@ public class ListFrag extends Fragment {
     private SeekBar seekBar;
     private int miles;
     private ArrayList<AChampEvent> temp;
+    private int pos;
+    private Location location;
 
     /**
      * Use this factory method to create a new instance of
@@ -82,6 +88,10 @@ public class ListFrag extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
         context = getActivity().getApplicationContext();
+        location = new Location("");
+        if(mListener.getCurrLoc() != null){
+            setCurrLoc(mListener.getCurrLoc());
+        }
 
     }
 
@@ -99,16 +109,20 @@ public class ListFrag extends Fragment {
         refreshList.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mListener.onRefreshRequested();
+                ArrayList<String> idArray = new ArrayList<String>();
+                                for(AChampEvent event: temp)
+                                    {
+                                                if(inRange(event)) idArray.add(event.get_id());
+                                }
+                                mListener.onRefreshRequested(idArray);
             }
         });
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                miles = progress / 100;
                 miles *= miles;
-                miles *= 100;
+                miles /= 10000;
             }
 
             @Override
@@ -123,7 +137,7 @@ public class ListFrag extends Fragment {
         });
 
 
-        temp = new ArrayList<AChampEvent>();
+        temp = mListener.getEvents();
 
         //linking  java side with the xml side for the ListView
         list = (ListView) view.findViewById(R.id.list);
@@ -137,6 +151,18 @@ public class ListFrag extends Fragment {
         //addEvents();
 
         return view;
+    }
+
+    private boolean inRange(AChampEvent event) {
+        Log.d("range", "in inrange");
+        Location temp = new Location("");
+        temp.setLatitude(event.getAddressLoc().getLatitude());
+        temp.setLongitude(event.getAddressLoc().getLongitude());
+        Log.d("rangeOf", "current location = " + location);
+        Log.d("rangeOf", "passed location = " + temp);
+        Log.d("rangeOf", "distance between is = " + temp.distanceTo(location));
+        if(temp.distanceTo(location) < miles) return true;
+        return false;
     }
 
     /*private void addEvents() {
@@ -170,6 +196,16 @@ public class ListFrag extends Fragment {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+
+    }
+
+    @Override
+    public void onResume(){
+
+        super.onResume();
+        if(mListener.getCurrLoc() != null){
+            setCurrLoc(mListener.getCurrLoc());
+        }
     }
 
 
@@ -180,11 +216,17 @@ public class ListFrag extends Fragment {
     }
 
     public void addNewData(ViewEvents_Task.EventsData data) {
-        if (data.entries != null) {
-            adapter.clear();
-            adapter.addAll((ArrayList<AChampEvent>)data.entries);
-            list.invalidate();
-        }
+        ArrayList<AChampEvent> entries = data.entries;
+                if (entries != null) {
+                    for (AChampEvent event : entries) {
+                        if (!temp.contains(event)) {
+                            temp.add(0, event);
+                        }
+                    }
+                    adapter.notifyDataSetChanged();
+                    list.smoothScrollByOffset(0);
+                    //list.invalidate();
+                }
         refreshList.setRefreshing(false);
     }
 
@@ -206,8 +248,7 @@ public class ListFrag extends Fragment {
 
     }*/
 
-    private class EventEntryAdapter extends ArrayAdapter<AChampEvent> implements
-            View.OnClickListener {
+    private class EventEntryAdapter extends ArrayAdapter<AChampEvent> {
         private final Context context;
         //values that will be displayed
         private final ArrayList<AChampEvent> values;
@@ -238,7 +279,28 @@ public class ListFrag extends Fragment {
             dateEntry.setText(values.get(position).getBeginingDate());
             timeEntry.setText(values.get(position).getBeginingTime());
             addressEntry.setText(values.get(position).getAddress());
-            image.setImageBitmap(StringToBitMap(values.get(position).getPicture()));
+            image.setImageBitmap(values.get(position).getPicture());
+
+            pos = position;
+            image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    Bundle bundle = new Bundle();
+                    bundle.putString("title", values.get(pos).getTitle());
+                    bundle.putString("address", values.get(pos).getAddress());
+                    bundle.putString("date", values.get(pos).getBeginingDate());
+                    bundle.putString("time", values.get(pos).getBeginingTime());
+                    bundle.putString("description", values.get(pos).getDescription());
+                    bundle.putString("bitmap", BitMapToString(values.get(pos).getPicture()));
+
+                    //bundle.putString("picture", currEvent.getPicture().toString());
+                    Intent i = new Intent(getActivity().getApplicationContext(), EventPage.class);
+                    i.putExtras(bundle);
+                    Log.d("bundleerr", "bundle title is " + bundle.get("title"));
+                    startActivity(i);
+                }
+            });
 
 
             // The code below sets tags to your buttons so that you can detect which one was pressed
@@ -246,36 +308,32 @@ public class ListFrag extends Fragment {
             return rowView;
         }
 
-        private Bitmap StringToBitMap(String encodedString){
-            try{
-                byte [] encodeByte= Base64.decode(encodedString, Base64.DEFAULT);
-                Bitmap bitmap= BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-                return bitmap;
-            }catch(Exception e){
-                e.getMessage();
-                return null;
-            }
+
+
+    }
+
+    private String BitMapToString(Bitmap bitmap){
+        if(bitmap == null)
+        {
+            return "";
         }
-
-        @Override
-        public void onClick(View view) {
-            // TODO Auto-generated method stub
-
-            if (((String[]) view.getTag())[1] == "more") {
-
-
-                //Intent i = new Intent(context, AChampEvent.class);
-                //startActivity(i);
-                //getFragmentManager().beginTransaction().remove(getFragmentManager().findFragmentByTag("list")).commit();
-
-            }
-        }
-
+        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte [] b=baos.toByteArray();
+        String temp= Base64.encodeToString(b, Base64.DEFAULT);
+        return temp;
     }
 
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onRefreshRequested();
+        public void onRefreshRequested(ArrayList<String> idArray);
+        public ArrayList<AChampEvent> getEvents();
+        public LatLng getCurrLoc();
+    }
+
+    public void setCurrLoc(LatLng lg){
+        location.setLatitude(lg.latitude);
+        location.setLongitude(lg.longitude);
     }
 
 }

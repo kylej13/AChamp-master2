@@ -39,9 +39,9 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:windowSoftInputMode="adjustPan|stateAlwaysHidden"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan|stateAlwaysHidden" >
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
             <intent-filter>
@@ -50,12 +50,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.facebook.FacebookActivity"
-            android:configChanges=
-                "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:label="@string/app_name" />
+        <activity
+            android:name=".Login.LoginActivity"
+            android:label="@string/title_activity_login"
+            android:theme="@android:style/Theme.WithActionBar" >
+        </activity>
+        <activity
+            android:name=".EventPage"
+            android:label="@string/title_activity_event_page" >
+        </activity>
     </application>
 
 </manifest>
